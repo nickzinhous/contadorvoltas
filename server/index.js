@@ -287,11 +287,11 @@ app.get('/api/health', (req, res) => {
 
 // Porta que Railway passa para rodar a app
 const PORT = process.env.PORT || 8080;
-console.log('Variável PORT:', PORT);
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🚀 Servidor ouvindo na porta ${PORT}`);
 });
+
 
 // Captura erros não tratados
 process.on('unhandledRejection', (err) => {
