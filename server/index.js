@@ -6,22 +6,27 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração do banco via variáveis de ambiente do Railway
+// Configurações do banco via variáveis de ambiente (Railway)
 const dbConfig = {
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: Number(process.env.MYSQLPORT)
+  port: Number(process.env.MYSQLPORT),
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 };
 
 let db;
 
 (async function initializeDatabase() {
   try {
-    db = await mysql.createPool(dbConfig);
+    db = mysql.createPool(dbConfig);
+    await db.getConnection(); // Testa conexão
+
     console.log('✅ Conectado ao banco de dados MySQL');
-    
+
     // Criação/validação das tabelas
     await db.query(`
       CREATE TABLE IF NOT EXISTS clientes (
@@ -33,18 +38,18 @@ let db;
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    
+
     await db.query(`
       CREATE TABLE IF NOT EXISTS sessoes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         cliente_id INT NOT NULL,
         data_inicio DATETIME NOT NULL,
         data_fim DATETIME,
-        ativa BOOLEAN DEFAULT true,
+        ativa BOOLEAN DEFAULT TRUE,
         FOREIGN KEY (cliente_id) REFERENCES clientes(id)
       )
     `);
-    
+
     await db.query(`
       CREATE TABLE IF NOT EXISTS registros_voltas (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,7 +64,7 @@ let db;
         FOREIGN KEY (sessao_id) REFERENCES sessoes(id)
       )
     `);
-    
+
     console.log('✅ Tabelas verificadas/criadas');
   } catch (err) {
     console.error('❌ Erro ao conectar/configurar o banco de dados:', err);
@@ -93,23 +98,6 @@ app.post('/api/clientes', async (req, res) => {
   }
 });
 
-app.get('/api/voltas', async (req, res) => {
-  try {
-    const [voltas] = await db.query(
-      `SELECT v.id, v.cliente_id, c.nome AS cliente_nome, v.sessao_id, s.data_inicio AS sessao_inicio,
-              v.quantidade_voltas, v.distancia_total, v.tempo_total, v.data_registro, v.sessao_paciente
-       FROM registros_voltas v
-       LEFT JOIN clientes c ON v.cliente_id = c.id
-       LEFT JOIN sessoes s ON v.sessao_id = s.id
-       ORDER BY v.data_registro DESC`
-    );
-    res.json(voltas);
-  } catch (err) {
-    console.error('Erro ao buscar voltas:', err);
-    res.status(500).json({ error: 'Erro ao buscar voltas' });
-  }
-});
-
 app.get('/api/clientes', async (req, res) => {
   try {
     const [clientes] = await db.query(
@@ -130,11 +118,13 @@ app.post('/api/sessoes', async (req, res) => {
     const [cliente] = await db.query('SELECT id FROM clientes WHERE id = ?', [cliente_id]);
     if (cliente.length === 0) return res.status(404).json({ error: 'Cliente não encontrado' });
 
+    // Finaliza sessões ativas anteriores
     await db.query(
       'UPDATE sessoes SET ativa = false, data_fim = NOW() WHERE cliente_id = ? AND ativa = true',
       [cliente_id]
     );
 
+    // Cria nova sessão ativa
     const [result] = await db.query(
       'INSERT INTO sessoes (cliente_id, data_inicio, ativa) VALUES (?, NOW(), true)',
       [cliente_id]
@@ -152,6 +142,7 @@ app.post('/api/sessoes', async (req, res) => {
 app.get('/api/sessoes', async (req, res) => {
   try {
     const { cliente_id } = req.query;
+
     let query = `
       SELECT s.id, s.cliente_id, c.nome as cliente_nome, 
              s.data_inicio, s.ativa 
@@ -238,11 +229,28 @@ app.post('/api/voltas', async (req, res) => {
       distancia_total,
       tempo_total,
       sessao_id: sessaoId,
-      sessao_paciente: novaSessaoPaciente
+      sessao_paciente: novaSessaoPaciente,
     });
   } catch (err) {
     console.error('Erro ao registrar voltas:', err);
     res.status(500).json({ error: 'Erro ao registrar voltas' });
+  }
+});
+
+app.get('/api/voltas', async (req, res) => {
+  try {
+    const [voltas] = await db.query(`
+      SELECT v.id, v.cliente_id, c.nome AS cliente_nome, v.sessao_id, s.data_inicio AS sessao_inicio,
+             v.quantidade_voltas, v.distancia_total, v.tempo_total, v.data_registro, v.sessao_paciente
+      FROM registros_voltas v
+      LEFT JOIN clientes c ON v.cliente_id = c.id
+      LEFT JOIN sessoes s ON v.sessao_id = s.id
+      ORDER BY v.data_registro DESC
+    `);
+    res.json(voltas);
+  } catch (err) {
+    console.error('Erro ao buscar voltas:', err);
+    res.status(500).json({ error: 'Erro ao buscar voltas' });
   }
 });
 
@@ -270,16 +278,15 @@ app.get('/api/voltas/:cliente_id', async (req, res) => {
 
 // Health check para saber se está rodando
 app.get('/api/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'OK',
     database: db ? 'Conectado' : 'Desconectado',
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 });
 
 // Porta que Railway passa para rodar a app
 const PORT = process.env.PORT || 8080;
-
 console.log('Variável PORT:', PORT);
 
 app.listen(PORT, '0.0.0.0', () => {
