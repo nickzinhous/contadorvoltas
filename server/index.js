@@ -1,10 +1,19 @@
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Para __dirname funcionar com ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve arquivos estáticos do frontend (build) dentro da pasta /server/public
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Configurações do banco via variáveis de ambiente (Railway)
 const dbConfig = {
@@ -88,9 +97,7 @@ app.get('/', (req, res) => {
   res.send('API Contador de Voltas está online ✅');
 });
 
-// --- ROTAS ---
-// (Seus endpoints já escritos aqui continuam iguais)
-
+// --- SUAS ROTAS API ---
 // POST /api/clientes
 app.post('/api/clientes', async (req, res) => {
   const { nome, email, telefone } = req.body;
@@ -300,6 +307,13 @@ app.get('/api/health', (req, res) => {
     database: db ? 'Conectado' : 'Desconectado',
     timestamp: new Date(),
   });
+});
+
+// *** IMPORTANTE: Coloque essa rota abaixo das rotas API ***
+// Para servir o frontend no modo SPA (React/Vue etc)
+// Se nenhuma rota acima bateu, devolve o index.html do build frontend
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Porta que Railway passa para rodar a app
