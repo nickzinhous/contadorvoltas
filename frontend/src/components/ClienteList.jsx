@@ -9,7 +9,7 @@ export default function ClienteList() {
   useEffect(() => {
     const fetchClientes = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/clientes');
+        const response = await axios.get('https://contadorvoltas-production.up.railway.app/api/clientes');
         setClientes(response.data);
       } catch (error) {
         console.error('Erro ao buscar clientes:', error);

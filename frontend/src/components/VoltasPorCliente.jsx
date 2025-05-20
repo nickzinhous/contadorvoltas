@@ -11,7 +11,7 @@ export default function VoltasPorCliente() {
   /* ---------- carrega lista de clientes ---------- */
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/clientes')
+      .get('https://contadorvoltas-production.up.railway.app/api/clientes')
       .then(res => setClientes(res.data))
       .catch(() => setClientes([]));
   }, []);
@@ -25,7 +25,7 @@ export default function VoltasPorCliente() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/voltas/${clienteSelecionado}`
+        `https://contadorvoltas-production.up.railway.app/api/voltas/${clienteSelecionado}`
       );
       console.log('Voltas recebidas:', res.data); // Log para verificar os dados recebidos
       setVoltas(res.data);

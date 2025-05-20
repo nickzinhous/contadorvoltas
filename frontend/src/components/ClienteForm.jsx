@@ -20,7 +20,7 @@ export default function ClienteForm() {
     setLoading(true);
     
     try {
-      await axios.post('http://localhost:5000/api/clientes', cliente);
+      await axios.post('https://contadorvoltas-production.up.railway.app/api/clientes', cliente);
       setSuccess(true);
       setCliente({ nome: '', email: '', telefone: '' });
       setTimeout(() => setSuccess(false), 3000);

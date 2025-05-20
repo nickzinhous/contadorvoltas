@@ -13,8 +13,8 @@ export default function SessaoPorCliente() {
     const fetchData = async () => {
       try {
         const [clientesRes, sessoesRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/clientes'),
-          axios.get('http://localhost:5000/api/sessoes')
+          axios.get('https://contadorvoltas-production.up.railway.app/api/clientes'),
+          axios.get('https://contadorvoltas-production.up.railway.app/api/sessoes')
         ]);
         setClientes(clientesRes.data);
         setSessoesAtivas(sessoesRes.data);
@@ -37,12 +37,12 @@ export default function SessaoPorCliente() {
     setLoading(true);
     
     try {
-      const res = await axios.post('http://localhost:5000/api/sessoes', {
+      const res = await axios.post('https://contadorvoltas-production.up.railway.app/api/sessoes', {
         cliente_id: clienteSelecionado
       });
       
       setSessaoId(res.data.id);
-      const response = await axios.get('http://localhost:5000/api/sessoes');
+      const response = await axios.get('https://contadorvoltas-production.up.railway.app/api/sessoes');
       setSessoesAtivas(response.data);
     } catch (err) {
       console.error('Erro ao criar sessão:', err);
@@ -56,8 +56,8 @@ export default function SessaoPorCliente() {
     if (!window.confirm('Tem certeza que deseja encerrar esta sessão?')) return;
     
     try {
-      await axios.put(`http://localhost:5000/api/sessoes/${sessaoId}/desativar`);
-      const response = await axios.get('http://localhost:5000/api/sessoes');
+      await axios.put(`https://contadorvoltas-production.up.railway.app/api/sessoes/${sessaoId}/desativar`);
+      const response = await axios.get('https://contadorvoltas-production.up.railway.app/api/sessoes');
       setSessoesAtivas(response.data);
     } catch (err) {
       console.error('Erro ao encerrar sessão:', err);
