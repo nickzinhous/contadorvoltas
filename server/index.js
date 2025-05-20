@@ -23,7 +23,10 @@ let db;
 (async function initializeDatabase() {
   try {
     db = mysql.createPool(dbConfig);
-    await db.getConnection(); // Testa conexão
+
+    // Testa conexão pegando e liberando conexão
+    const connection = await db.getConnection();
+    connection.release();
 
     console.log('✅ Conectado ao banco de dados MySQL');
 
@@ -80,8 +83,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- ROTAS ---
+// Rota raiz para health check / evitar erro de app sem resposta
+app.get('/', (req, res) => {
+  res.send('API Contador de Voltas está online ✅');
+});
 
+// --- ROTAS ---
+// (Seus endpoints já escritos aqui continuam iguais)
+
+// POST /api/clientes
 app.post('/api/clientes', async (req, res) => {
   const { nome, email, telefone } = req.body;
   if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
@@ -98,6 +108,7 @@ app.post('/api/clientes', async (req, res) => {
   }
 });
 
+// GET /api/clientes
 app.get('/api/clientes', async (req, res) => {
   try {
     const [clientes] = await db.query(
@@ -110,6 +121,7 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
+// POST /api/sessoes
 app.post('/api/sessoes', async (req, res) => {
   const { cliente_id } = req.body;
   if (!cliente_id) return res.status(400).json({ error: 'cliente_id é obrigatório' });
@@ -139,6 +151,7 @@ app.post('/api/sessoes', async (req, res) => {
   }
 });
 
+// GET /api/sessoes
 app.get('/api/sessoes', async (req, res) => {
   try {
     const { cliente_id } = req.query;
@@ -165,6 +178,7 @@ app.get('/api/sessoes', async (req, res) => {
   }
 });
 
+// PUT /api/sessoes/:id/desativar
 app.put('/api/sessoes/:id/desativar', async (req, res) => {
   const { id } = req.params;
 
@@ -185,6 +199,7 @@ app.put('/api/sessoes/:id/desativar', async (req, res) => {
   }
 });
 
+// POST /api/voltas
 app.post('/api/voltas', async (req, res) => {
   const { cliente_id, quantidade_voltas, distancia_total, tempo_total } = req.body;
 
@@ -237,6 +252,7 @@ app.post('/api/voltas', async (req, res) => {
   }
 });
 
+// GET /api/voltas
 app.get('/api/voltas', async (req, res) => {
   try {
     const [voltas] = await db.query(`
@@ -254,6 +270,7 @@ app.get('/api/voltas', async (req, res) => {
   }
 });
 
+// GET /api/voltas/:cliente_id
 app.get('/api/voltas/:cliente_id', async (req, res) => {
   const { cliente_id } = req.params;
 
@@ -291,7 +308,6 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor ouvindo na porta ${PORT}`);
 });
-
 
 // Captura erros não tratados
 process.on('unhandledRejection', (err) => {
