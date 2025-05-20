@@ -6,6 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Configuração do banco via variáveis de ambiente do Railway
 const dbConfig = {
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -14,7 +15,6 @@ const dbConfig = {
   port: Number(process.env.MYSQLPORT)
 };
 
-
 let db;
 
 (async function initializeDatabase() {
@@ -22,7 +22,7 @@ let db;
     db = await mysql.createPool(dbConfig);
     console.log('✅ Conectado ao banco de dados MySQL');
     
-    // Verifica se as tabelas necessárias existem
+    // Criação/validação das tabelas
     await db.query(`
       CREATE TABLE IF NOT EXISTS clientes (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,7 +67,7 @@ let db;
   }
 })();
 
-// Middleware para garantir banco conectado
+// Middleware para garantir que o banco está conectado
 app.use((req, res, next) => {
   if (!db) {
     return res.status(500).json({ error: 'Banco de dados não conectado' });
@@ -77,12 +77,9 @@ app.use((req, res, next) => {
 
 // --- ROTAS ---
 
-// Criar cliente
 app.post('/api/clientes', async (req, res) => {
   const { nome, email, telefone } = req.body;
-  if (!nome) {
-    return res.status(400).json({ error: 'Nome é obrigatório' });
-  }
+  if (!nome) return res.status(400).json({ error: 'Nome é obrigatório' });
 
   try {
     const [result] = await db.query(
@@ -96,7 +93,6 @@ app.post('/api/clientes', async (req, res) => {
   }
 });
 
-// GET /api/voltas — retorna todas as voltas registradas
 app.get('/api/voltas', async (req, res) => {
   try {
     const [voltas] = await db.query(
@@ -114,7 +110,6 @@ app.get('/api/voltas', async (req, res) => {
   }
 });
 
-// Listar clientes
 app.get('/api/clientes', async (req, res) => {
   try {
     const [clientes] = await db.query(
@@ -127,34 +122,24 @@ app.get('/api/clientes', async (req, res) => {
   }
 });
 
-// Criar sessão (ativa)
 app.post('/api/sessoes', async (req, res) => {
   const { cliente_id } = req.body;
-
-  if (!cliente_id) {
-    return res.status(400).json({ error: 'cliente_id é obrigatório' });
-  }
+  if (!cliente_id) return res.status(400).json({ error: 'cliente_id é obrigatório' });
 
   try {
-    // Verifica se o cliente existe
     const [cliente] = await db.query('SELECT id FROM clientes WHERE id = ?', [cliente_id]);
-    if (cliente.length === 0) {
-      return res.status(404).json({ error: 'Cliente não encontrado' });
-    }
+    if (cliente.length === 0) return res.status(404).json({ error: 'Cliente não encontrado' });
 
-    // Desativa sessões ativas anteriores do cliente
     await db.query(
       'UPDATE sessoes SET ativa = false, data_fim = NOW() WHERE cliente_id = ? AND ativa = true',
       [cliente_id]
     );
 
-    // Cria nova sessão ativa
     const [result] = await db.query(
       'INSERT INTO sessoes (cliente_id, data_inicio, ativa) VALUES (?, NOW(), true)',
       [cliente_id]
     );
 
-    // Busca a sessão criada para retornar dados exatos
     const [novaSessao] = await db.query('SELECT * FROM sessoes WHERE id = ?', [result.insertId]);
 
     res.status(201).json(novaSessao[0]);
@@ -164,7 +149,6 @@ app.post('/api/sessoes', async (req, res) => {
   }
 });
 
-// Buscar sessões ativas
 app.get('/api/sessoes', async (req, res) => {
   try {
     const { cliente_id } = req.query;
@@ -190,7 +174,6 @@ app.get('/api/sessoes', async (req, res) => {
   }
 });
 
-// Desativar sessão
 app.put('/api/sessoes/:id/desativar', async (req, res) => {
   const { id } = req.params;
 
@@ -211,7 +194,6 @@ app.put('/api/sessoes/:id/desativar', async (req, res) => {
   }
 });
 
-// Registrar voltas
 app.post('/api/voltas', async (req, res) => {
   const { cliente_id, quantidade_voltas, distancia_total, tempo_total } = req.body;
 
@@ -220,27 +202,23 @@ app.post('/api/voltas', async (req, res) => {
   }
 
   try {
-    // Verifica cliente
     const [cliente] = await db.query('SELECT id FROM clientes WHERE id = ?', [cliente_id]);
     if (cliente.length === 0) {
       return res.status(404).json({ error: 'Cliente não encontrado' });
     }
 
-    // Busca sessão ativa
     const [sessaoAtiva] = await db.query(
       'SELECT id FROM sessoes WHERE cliente_id = ? AND ativa = true LIMIT 1',
       [cliente_id]
     );
     const sessaoId = sessaoAtiva.length > 0 ? sessaoAtiva[0].id : null;
 
-    // Busca o maior sessao_paciente para o cliente
     const [sessaoPacienteMax] = await db.query(
       'SELECT MAX(sessao_paciente) AS max_sessao FROM registros_voltas WHERE cliente_id = ?',
       [cliente_id]
     );
     const novaSessaoPaciente = (sessaoPacienteMax[0].max_sessao || 0) + 1;
 
-    // Insere registro de volta incluindo sessao_paciente
     const [result] = await db.query(
       `INSERT INTO registros_voltas 
        (cliente_id, quantidade_voltas, distancia_total, tempo_total, sessao_id, sessao_paciente) 
@@ -248,7 +226,6 @@ app.post('/api/voltas', async (req, res) => {
       [cliente_id, quantidade_voltas, distancia_total, tempo_total, sessaoId, novaSessaoPaciente]
     );
 
-    // Atualiza total_voltas do cliente
     await db.query(
       'UPDATE clientes SET total_voltas = COALESCE(total_voltas, 0) + ? WHERE id = ?',
       [quantidade_voltas, cliente_id]
@@ -276,7 +253,7 @@ app.get('/api/voltas/:cliente_id', async (req, res) => {
     const [voltas] = await db.query(
       `SELECT v.id, v.quantidade_voltas, v.distancia_total, v.tempo_total, 
               v.data_registro, s.id as sessao_id, s.data_inicio as sessao_inicio,
-              v.sessao_paciente   -- ADICIONE ESSA LINHA AQUI
+              v.sessao_paciente
        FROM registros_voltas v
        LEFT JOIN sessoes s ON v.sessao_id = s.id
        WHERE v.cliente_id = ?
@@ -291,8 +268,7 @@ app.get('/api/voltas/:cliente_id', async (req, res) => {
   }
 });
 
-
-// Health check
+// Health check para saber se está rodando
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK',
@@ -301,14 +277,16 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// --- Servidor ---
+// Porta que Railway passa para rodar a app
 const PORT = process.env.PORT || 8080;
+
+console.log('Variável PORT:', PORT);
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor ouvindo na porta ${PORT}`);
 });
 
-
-// Tratamento de erros não capturados
+// Captura erros não tratados
 process.on('unhandledRejection', (err) => {
   console.error('Erro não tratado:', err);
 });
