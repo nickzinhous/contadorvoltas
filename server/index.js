@@ -1,23 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const dbConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT
+  host: 'localhost',
+  user: 'root',
+  password: 'nic@adm',
+  database: 'controle_voltas'
 };
-
 
 let db;
 
@@ -306,7 +300,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // --- Servidor ---
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor ouvindo em todas as interfaces na porta ${PORT}`);
 });
