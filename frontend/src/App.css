@@ -31,9 +31,14 @@ body {
   background-color: #f1f5f9;
   color: var(--dark);
   -webkit-font-smoothing: antialiased;
+  margin: 0 auto;
 }
 
 .app {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
   max-width: 1700px;
   margin: 0 auto;
   width: 1200px;
@@ -61,7 +66,7 @@ body {
 }
 
 .logo span {
-  color: var(--accent);
+color: var(--primary);
 }
 
 .logo-icon {
@@ -84,6 +89,7 @@ body {
 }
 
 .tabs button {
+  text-align: center;
   padding: 0.75rem 1.5rem;
   background: none;
   border: none;
@@ -95,7 +101,9 @@ body {
   transition: var(--transition);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+}
+button{
+  text-align: center;
 }
 
 .tabs button:hover {
@@ -532,4 +540,33 @@ body {
 
 .alert p + p {
   margin-top: 0.5rem;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+  align-items: center;
+  background-color: #f8f9ff;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  color: #333;
+}
+
+.filtros input[type="date"],
+.filtros input[type="number"] {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  margin-top: 0.3rem;
+  min-width: 160px;
 }

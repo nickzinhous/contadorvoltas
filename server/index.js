@@ -7,15 +7,12 @@ app.use(cors());
 app.use(express.json());
 
 // Configurações do banco via variáveis de ambiente (Railway)
+
 const dbConfig = {
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: Number(process.env.MYSQLPORT),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  host: 'localhost',
+  user: 'root',
+  password: 'nic@adm',
+  database: 'controle_voltas'
 };
 
 let db;

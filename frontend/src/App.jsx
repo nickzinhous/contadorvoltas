@@ -13,6 +13,7 @@ function App() {
       <header className="header">
         <div className="logo">
           Controle <span>Voltas</span>
+           <img src="" width='50' alt="" />
         </div>
         <nav className="tabs">
           <button 
