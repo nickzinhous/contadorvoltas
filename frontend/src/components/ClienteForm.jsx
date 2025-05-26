@@ -35,12 +35,12 @@ export default function ClienteForm() {
   return (
     <div className="form-container">
       <div className="card-header">
-        <h2 className="card-title">Cadastrar Novo Cliente</h2>
+        <h2 className="card-title">Cadastrar Novo Paciente</h2>
       </div>
       
       {success && (
         <div className="alert alert-success">
-          Cliente cadastrado com sucesso!
+          Paciente cadastrado com sucesso!
         </div>
       )}
       
@@ -54,7 +54,7 @@ export default function ClienteForm() {
             value={cliente.nome}
             onChange={handleChange}
             required
-            placeholder="Digite o nome do cliente"
+            placeholder="Digite o nome do Paciente"
           />
         </div>
         
@@ -95,7 +95,7 @@ export default function ClienteForm() {
             </>
           ) : (
             <>
-              <i className="fas fa-save"></i> Cadastrar Cliente
+              <i className="fas fa-save"></i> Cadastrar Paciente
             </>
           )}
         </button>

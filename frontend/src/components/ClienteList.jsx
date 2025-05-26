@@ -28,17 +28,17 @@ export default function ClienteList() {
     cliente.telefone?.includes(searchTerm)
   );
 
-  if (loading) return <div className="text-center mt-3"><i className="fas fa-spinner fa-spin"></i> Carregando clientes...</div>;
+  if (loading) return <div className="text-center mt-3"><i className="fas fa-spinner fa-spin"></i> Carregando Pacientes...</div>;
 
   return (
     <div className="clientes-list">
       <div className="card-header">
-        <h2 className="card-title">Lista de Clientes</h2>
+        <h2 className="card-title">Lista de Pacientes</h2>
         <div className="form-group" style={{ width: '300px' }}>
           <input
             type="text"
             className="form-control"
-            placeholder="Buscar clientes..."
+            placeholder="Buscar Pacientes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -83,7 +83,7 @@ export default function ClienteList() {
             ) : (
               <tr>
                 <td colSpan="4" className="text-center text-muted">
-                  Nenhum cliente encontrado
+                  Nenhum Paciente encontrado
                 </td>
               </tr>
             )}

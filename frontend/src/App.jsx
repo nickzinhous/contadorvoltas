@@ -20,7 +20,7 @@ function App() {
             className={activeTab === 'clientes' ? 'active' : ''}
             onClick={() => setActiveTab('clientes')}
           >
-            <i className="fas fa-users"></i> Clientes
+            <i className="fas fa-users"></i> Pacientes
           </button>
           <button 
             className={activeTab === 'sessoes' ? 'active' : ''}

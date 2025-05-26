@@ -67,7 +67,7 @@ export default function VoltasPorCliente() {
 
   return (
     <div className="voltas-section">
-      <h2>Registro de Voltas por Cliente</h2>
+      <h2>Registro de Voltas por Paciente</h2>
     <br />
       <div className="cliente-selector" style={{ marginBottom: '1rem' }}>
         <select
@@ -75,7 +75,7 @@ export default function VoltasPorCliente() {
           value={clienteSelecionado}
           onChange={e => setClienteSelecionado(e.target.value)}
         >
-          <option value="">-- Selecione um cliente --</option>
+          <option value="">-- Selecione um Paciente --</option>
           {clientes.map(c => (
             <option key={c.id} value={c.id}>
               {c.nome} (ID: {c.id})

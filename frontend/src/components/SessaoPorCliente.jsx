@@ -29,7 +29,7 @@ export default function SessaoPorCliente() {
 
   const criarSessao = async () => {
     if (!clienteSelecionado) {
-      setError('Selecione um cliente antes de criar a sessão.');
+      setError('Selecione um Paciente antes de criar a sessão.');
       return;
     }
     
@@ -84,14 +84,14 @@ export default function SessaoPorCliente() {
       
       <div className="form-grid">
         <div className="form-group">
-          <label className="form-label">Selecione um cliente:</label>
+          <label className="form-label">Selecione um Paciente:</label>
           <select 
             className="form-control"
             value={clienteSelecionado} 
             onChange={e => setClienteSelecionado(e.target.value)}
             disabled={loading}
           >
-            <option value="">-- Selecione um cliente --</option>
+            <option value="">-- Selecione um Paciente --</option>
             {clientes.map(c => (
               <option key={c.id} value={c.id}>{c.nome} (ID: {c.id})</option>
             ))}
@@ -156,7 +156,7 @@ export default function SessaoPorCliente() {
               <thead>
                 <tr>
                   <th>ID Sessão</th>
-                  <th>Cliente</th>
+                  <th>Paciente</th>
                   <th>Início</th>
                   <th>Ações</th>
                 </tr>
